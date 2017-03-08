@@ -76,7 +76,7 @@ void MathModel::addVS(VoltageSource &element) {
     int number = pointCount * 3 + element.getNumberVS();
     int column1 = pointCount * 2 + firstPoint - 1;
     int column2 = pointCount * 2 + secondPoint - 1;
-    int row = 12;
+    int row = number;
     double potentialDiff = 0;
     if(firstPoint != 0) {
         matrix->into_matrix(row, column1, 1);
