@@ -207,9 +207,10 @@ void MathModel::resolve() {
                 prevSolution[i] = solution[i];
             }
             out << tempTime << '\t';
-            for (int i = 8; i < pointCount * 3 + idealSourceCount; ++i) {
+            for (int i = pointCount * 2; i < pointCount * 3; ++i) {
                 out << solution[i] << '\t';
             }
+            out << (inductors[0].getValue() * (solution[pointCount] - solution[pointCount + 1]));
             out << '\n';
 
             prevStep[0] = timeIncrement;
