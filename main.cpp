@@ -9,7 +9,7 @@ int main() {
     Capacitor C1(1, 2, 1e-6), CB(2, 3, 2e-12);
     Inductor L1(1, 2, 1e-3);
     Resistor RU(2, 3, 1e6), RB(3, 4, 20), R1(4, 0, 1e3);
-    ElectricitySource ES(2, 3);
+    ElectricitySource ES(3, 2);
     MM.addCapasitor(C1);
     MM.addCapasitor(CB);
     MM.addInductor(L1);

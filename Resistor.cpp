@@ -7,8 +7,8 @@
 Resistor::Resistor(int firstPoint, int secondPoint, double resistance) : BaseElement(firstPoint, secondPoint), resistance(resistance) {}
 
 double Resistor::getValue() const {
-//    return 1 / resistance;
-    return resistance;
+    return 1 / resistance;
+//    return resistance;
 }
 
 int Resistor::getPosition() const {

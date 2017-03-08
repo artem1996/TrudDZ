@@ -81,17 +81,26 @@ void MathModel::addElement(ELEMENT &element) {
     int column2 = pointCount * element.getPosition() + secondPoint - 1;
     int row = pointCount * 2 + firstPoint - 1;
     double value = element.getValue();
-    double variablesDiff = firstPoint == 0 ? 0 : solution[column1] - secondPoint == 0 ? 0 : solution[column2];
+    double variablesDiff = (firstPoint == 0 ? 0 : solution[column1]) - (secondPoint == 0 ? 0 : solution[column2]);
+//    std::cout << column1 << ' ' << column2 << std::endl;
+//    std::cout << row << std::endl;
+//    mEq[8] += -(-solution[12]
+//                + C1 * (solution[0] - solution[1])
+//                + (1.0 / L1) * (solution[4] - solution[5]));
+//    mEq[9] += -(-(C1 * (solution[0] - solution[1])
     if(firstPoint != 0) {
         matrix->into_matrix(row, column1, value);
         matrix->into_matrix(row, column2, secondPoint == 0 ? 0 : - value);
-        matrix->into_constants(row, value * variablesDiff);
+        //std::cout << row << ' ' << ( firstPoint == 0 ? 0 : solution[column1]) << ' ' << (secondPoint == 0 ? 0 : solution[column2]) << endl;
+        matrix->into_constants(row, -value * variablesDiff);
     }
     row = pointCount * 2 + secondPoint - 1;
+    //std::cout << row << std::endl;
     if(secondPoint != 0) {
         matrix->into_matrix(row, column1, firstPoint == 0 ? 0 : - value);
         matrix->into_matrix(row, column2, value);
-        matrix->into_constants(row, - value * variablesDiff);
+        //std::cout << row << ' ' << (variablesDiff) << endl;
+        matrix->into_constants(row, value * variablesDiff);
     }
 }
 
@@ -107,13 +116,13 @@ void MathModel::addDifficultElement(ELEMENT &element) {
     if(firstPoint != 0) {
         matrix->into_matrix(row, column1, matrixValue);
         matrix->into_matrix(row, secondPoint == 0 ? 0 : column2, - matrixValue);
-        matrix->into_constants(row, constantValue);
+        matrix->into_constants(row, -constantValue);
     }
     row = pointCount * 2 + secondPoint - 1;
     if(secondPoint != 0) {
         matrix->into_matrix(row, firstPoint == 0 ? 0 : column1, - matrixValue);
         matrix->into_matrix(row, column2, matrixValue);
-        matrix->into_constants(row, - constantValue);
+        matrix->into_constants(row, constantValue);
     }
 }
 
@@ -146,15 +155,15 @@ void MathModel::addVS(VoltageSource &element) {
         matrix->into_matrix(row, column1, 1);
         potentialDiff -= solution[column1];
         matrix->into_matrix(column1, number, 1);
-        matrix->into_constants(column1, solution[number]);
+        matrix->into_constants(column1, -solution[number]);
     }
     if(secondPoint != 0) {
         matrix->into_matrix(row, column2, -1);
         potentialDiff += solution[column2];
         matrix->into_matrix(column2, number, -1);
-        matrix->into_constants(column2, -solution[number]);
+        matrix->into_constants(column2, solution[number]);
     }
-    matrix->into_constants(row, element.getTempPotential(tempTime) - potentialDiff);
+    matrix->into_constants(row, potentialDiff - element.getTempPotential(tempTime));
 }
 
 void MathModel::addCapasitor(Capacitor &capacitor) {
@@ -227,31 +236,31 @@ void MathModel::resolve() {
             matrix->reset();
             firstSet();
             secondSet();
-//            for(int i = 0; i < capacitors.size(); ++i) {
-//                addElement(capacitors[i]);
-//            }
-//            for(int i = 0; i < ES.size(); i++) {
-//                double potential1 = solution[pointCount * 2 + ES[i].getFirstPoint() - 1];
-//                double potential2 = solution[pointCount * 2 + ES[i].getSecondPoint() - 1];
-//                ES[i].setPotentialDifference(potential1 - potential2);
-//                addDifficultElement(ES[i]);
-//            }
-//            for (int i = 0; i < inductors.size(); ++i) {
-//                addElement(inductors[i]);
-//            }
-//            for (int i = 0; i < resistors.size(); ++i) {
-//                addElement(resistors[i]);
-//            }
-//            for (int i = 0; i < VS.size(); ++i) {
-//                addVS(VS[i]);
-//            }
+            for(int i = 0; i < capacitors.size(); ++i) {
+                addElement(capacitors[i]);
+            }
+            for(int i = 0; i < ES.size(); i++) {
+                double potential1 = solution[pointCount * 2 + ES[i].getFirstPoint() - 1];
+                double potential2 = solution[pointCount * 2 + ES[i].getSecondPoint() - 1];
+                ES[i].setPotentialDifference(potential1 - potential2);
+                addDifficultElement(ES[i]);
+            }
+            for (int i = 0; i < inductors.size(); ++i) {
+                addElement(inductors[i]);
+            }
+            for (int i = 0; i < resistors.size(); ++i) {
+                addElement(resistors[i]);
+            }
+            for (int i = 0; i < VS.size(); ++i) {
+                addVS(VS[i]);
+            }
 
 
             
-            double C1 = capacitors[0].getValue();
-            double CB = capacitors[1].getValue();
-            double L1 = inductors[0].getValue();
-            double RU = resistors[0].getValue(), RB = resistors[1].getValue(), R1 = resistors[2].getValue();
+            //double C1 = capacitors[0].getValue();
+            //double CB = capacitors[1].getValue();
+            //double L1 = inductors[0].getValue();
+            //double RU = resistors[0].getValue(), RB = resistors[1].getValue(), R1 = resistors[2].getValue();
             const double It = 1e-12;
             const double MFt = 0.026;
             int dimension = 13;
@@ -282,30 +291,30 @@ void MathModel::resolve() {
 //            mY[7][7] = 1.0;
 //            mY[7][11] = -timeIncrement;
 //            //
-            mY[8][0] += C1;
-            mY[8][1] += -C1;
-            mY[8][4] += 1.0 / L1;
-            mY[8][5] += -1.0 / L1;
-            mY[8][12] += -1.0;
+            //mY[8][0] += C1;
+            //mY[8][1] += -C1;
+            //mY[8][4] += 1.0 / L1;
+            //mY[8][5] += -1.0 / L1;
+            //mY[8][12] += -1.0;
 
-            mY[9][0] += -C1;
-            mY[9][1] += C1 + CB;
-            mY[9][2] += -CB;
-            mY[9][4] += -1.0 / L1;
-            mY[9][5] += 1.0 / L1;
-            mY[9][9] += 1.0 / RU + (It / MFt) * exp(-(solution[9] - solution[10]) / MFt);
-            mY[9][10] += -1.0 / RU - (It / MFt) * exp(-(solution[9] - solution[10]) / MFt);
+            //mY[9][0] += -C1;
+            //mY[9][1] += /*C1*/ + CB;
+            //mY[9][2] += -CB;
+            //mY[9][4] += -1.0 / L1;
+            //mY[9][5] += 1.0 / L1;
+            //mY[9][9] += /*1.0 / RU*/ + (It / MFt) * exp(-(solution[9] - solution[10]) / MFt);
+            //mY[9][10] += /*-1.0 / RU*/ - (It / MFt) * exp(-(solution[9] - solution[10]) / MFt);
 
-            mY[10][1] += -CB;
-            mY[10][2] += CB;
-            mY[10][9] += -1.0 / RU - (It / MFt) * exp(-(solution[9] - solution[10]) / MFt);
-            mY[10][10] += 1.0 / RB + 1.0 / RU + (It / MFt) * exp(-(solution[9] - solution[10]) / MFt);
-            mY[10][11] += -1.0 / RB;
+            //mY[10][1] += -CB;
+            //mY[10][2] += CB;
+            //mY[10][9] += /*-1.0 / RU*/ - (It / MFt) * exp(-(solution[9] - solution[10]) / MFt);
+            //mY[10][10] += /*1.0 / RB + 1.0 / RU*/ + (It / MFt) * exp(-(solution[9] - solution[10]) / MFt);
+            //mY[10][11] += -1.0 / RB;
 
-            mY[11][10] += -1.0 / RB;
-            mY[11][11] += 1.0 / R1 + 1.0 / RB;
+            //mY[11][10] += -1.0 / RB;
+            //mY[11][11] += 1.0 / R1 + 1.0 / RB;
             //
-            mY[12][8] += 1.0;
+            //mY[12][8] += 1.0;
             //
 //
 //            //Çàïîëíåíèå âåêòîðà óðàâíåíèé
@@ -319,20 +328,23 @@ void MathModel::resolve() {
 //            mEq[6] = -(solution[6] - (prevSolution[6] + solution[10] * timeIncrement));
 //            mEq[7] = -(solution[7] - (prevSolution[7] + solution[11] * timeIncrement));
 //
-            mEq[8] += -(-solution[12]
-                       + C1 * (solution[0] - solution[1])
-                       + (1.0 / L1) * (solution[4] - solution[5]));
-            mEq[9] += -(-(C1 * (solution[0] - solution[1]) ///////////////////////////////////////////
-                         + (1.0 / L1) * (solution[4] - solution[5])
-                         + CB * (solution[2] - solution[1])
-                         + (1.0 / RU) * (solution[10] - solution[9])
-                         + It * (exp((solution[10] - solution[9]) / MFt) - 1.0)));
-            mEq[10] += -(CB * (solution[2] - solution[1])
-                        + (1.0 / RU) * (solution[10] - solution[9])
-                        + It * (exp((solution[10] - solution[9]) / MFt) - 1.0)
-                        - (1.0 / RB) * (solution[11] - solution[10]));
-            mEq[11] += -((1.0 / RB) * (solution[11] - solution[10]) + (1.0 / R1) * (solution[11]));
-            mEq[12] += -(solution[8] - E(tempTime));
+            //mEq[8] +=  -(-solution[12]);
+                       //+ (1.0 / L1) * (solution[4] - solution[5]));
+            //std::cout << 8 << ' ' << solution[0] << ' ' << solution[1] << endl;
+            //mEq[8] += - C1 * (solution[0] - solution[1]);
+            //mEq[9] +=  ///////////////////////////////////////////
+            //          -(-(//(1.0 / L1) * (solution[4] - solution[5])
+                         //+ CB * (solution[2] - solution[1])
+                         //+ (1.0 / RU) * (solution[10] - solution[9])
+            //             + It * (exp((solution[10] - solution[9]) / MFt) - 1.0)));
+            //std::cout << 9 << ' ' << (solution[0] - solution[1]) << endl;
+            //mEq[9] += C1 * (solution[0] - solution[1]);
+            //mEq[10] += -(//CB * (solution[2] - solution[1])
+                        //+ (1.0 / RU) * (solution[10] - solution[9])
+            //            + It * (exp((solution[10] - solution[9]) / MFt) - 1.0));
+                        //- (1.0 / RB) * (solution[11] - solution[10]));
+            //mEq[11] += -((1.0 / RB) * (solution[11] - solution[10]) + (1.0 / R1) * (solution[11]));
+            //mEq[12] += -(solution[8] - E(tempTime));
 
 
 
@@ -392,8 +404,8 @@ void MathModel::resolve() {
             for(int i = 0; i < pointCount * 3 + idealSourceCount; i++) {
                 prevSolution[i] = solution[i];
             }
-
-            for (int i = 0; i < pointCount * 3 + idealSourceCount; ++i) {
+            out << tempTime << '\t';
+            for (int i = 8; i < pointCount * 3 + idealSourceCount; ++i) {
                 out << solution[i] << '\t';
             }
             out << '\n';
