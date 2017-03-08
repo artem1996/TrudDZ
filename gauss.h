@@ -36,6 +36,7 @@ public:
     int clearStr(int);
     int triangle();
     int do_solution();
+    int solution2();
     double* get_solution();
     int reset();
     int print_system();

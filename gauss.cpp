@@ -122,3 +122,56 @@ double *Gauss::getConstants() const {
 void Gauss::setSolution(double *solution) {
     Gauss::solution = solution;
 }
+
+int Gauss::solution2() {
+    double a;
+    double b;
+    double sum;
+    for (int i = 0; i < capacity; i++) {
+        if (matrix[i][i] == 0.0) {
+            double maxD = 0.0;
+            int maxI = i;
+            for (int j = i + 1; j < capacity; j++) {
+                if (abs(matrix[j][i]) > maxD) {
+                    maxD = abs(matrix[j][i]);
+                    maxI = j;
+                }
+            }
+            double* tmpStrA = new double[capacity];
+            double tmpStrB;
+            for (int str = 0; str < capacity; str++) {
+                tmpStrA[str] = matrix[maxI][str];
+                matrix[maxI][str] = matrix[i][str];
+                matrix[i][str] = tmpStrA[str];
+            }
+            delete[] tmpStrA;
+            tmpStrB = constants[maxI];
+            constants[maxI] = constants[i];
+            constants[i] = tmpStrB;
+        }
+
+        a = matrix[i][i];
+        for (int l = 0; l < capacity; l++) {
+            matrix[i][l] = matrix[i][l] / a;
+        }
+        constants[i] = constants[i] / a;
+
+        a = matrix[i][i];
+        for (int j = i + 1; j < capacity; j++) {
+            b = matrix[j][i];
+            for (int k = i; k < capacity; k++)
+                matrix[j][k] = matrix[i][k] * b - matrix[j][k] * a;
+            constants[j] = constants[i] * b - constants[j] * a;
+        }
+    }
+//    îáðàòíûé õîä
+    for (int i = capacity - 1; i >= 0; i--) {
+        sum = 0.0;
+        for (int j = i + 1; j < capacity; j++)
+            sum += matrix[i][j] * constants[j];
+        sum = constants[i] - sum;
+        constants[i] = sum / matrix[i][i];
+    }
+    swap(solution, constants);
+    return 0;
+}
